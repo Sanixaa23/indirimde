@@ -1,0 +1,82 @@
+{
+  "query": {
+    "q": "kulaklik"
+  },
+  "resolvedQuery": {
+    "initialSearchText": "kulaklik"
+  },
+  "total": 100000,
+  "currency": "TL",
+  "pageIndex": 1,
+  "products": [
+    {
+      "id": 819066262,
+      "name": "Air Pro 2 Anc Gürültü Engelleyici Bluetooth Kulaklık IOS Android Tüm Telefonlar ile Uyumlu Kulaklık",
+      "brand": "TARÇIN",
+      "url": "/tarcin/air-pro-2-anc-gurultu-engelleyici-bluetooth-kulaklik-ios-android-tum-telefonlar-ile-uyumlu-kulaklik-p-819066262?boutiqueId=61&merchantId=953397",
+      "image": "https://cdn.dsmcdn.com/mnresize/400/-/ty1576/prod/QC/20241003/09/fdecdf1b-686c-3039-94c9-9f0b0d3dfc06/1_org_zoom.jpg",
+      "price": {
+        "old": 0,
+        "oldText": "0",
+        "currency": "TL",
+        "current": 931,
+        "currentText": "931",
+        "originalPrice": 884.45,
+        "originalPriceText": "884,45",
+        "discountedPrice": 884.45,
+        "discountedPriceText": "884,45",
+        "currencySymbol": "TL"
+      },
+      "ratingScore": {
+        "averageRating": 4.3714184648036785,
+        "totalCount": 14135
+      }
+    },
+    {
+      "id": 233129679,
+      "name": "Pro 5 Ios Android Uyumlu Dokunmatik Bluetooth Kulaklık 8d Stereo Hd Ses",
+      "brand": "Abbruch",
+      "url": "/abbruch/pro-5-ios-android-uyumlu-dokunmatik-bluetooth-kulaklik-8d-stereo-hd-ses-p-233129679?boutiqueId=61&merchantId=754296",
+      "image": "https://cdn.dsmcdn.com/mnresize/400/-/ty1582/prod/QC/20241009/14/3f6fb3ef-e6b4-3ef4-a0d0-684b8dca3f49/1_org_zoom.jpg",
+      "price": {
+        "old": 0,
+        "oldText": "0",
+        "currency": "TL",
+        "current": 479.9,
+        "currentText": "479,90",
+        "originalPrice": 455.9,
+        "originalPriceText": "455,90",
+        "discountedPrice": 455.9,
+        "discountedPriceText": "455,90",
+        "currencySymbol": "TL"
+      },
+      "ratingScore": {
+        "averageRating": 3.4633174618598774,
+        "totalCount": 30873
+      }
+    },
+    {
+      "id": 855229295,
+      "name": "Redmi Buds 6 Play Siyah Kulakiçi Kulaklık-Gürültü Önleme BT5.4 IOS&Android (Xiaomi TR Garantili)",
+      "brand": "Xiaomi",
+      "url": "/xiaomi/redmi-buds-6-play-siyah-kulakici-kulaklik-gurultu-onleme-bt5-4-ios-android-xiaomi-tr-garantili-p-855229295?boutiqueId=689770&merchantId=968",
+      "image": "https://cdn.dsmcdn.com/mnresize/400/-/ty1797/prod/QC_PREP/20251207/22/be037857-44fe-369d-968e-6dc2f928f52b/1_org_zoom.jpg",
+      "price": {
+        "old": 739,
+        "oldText": "739",
+        "currency": "TL",
+        "current": 719,
+        "currentText": "719",
+        "originalPrice": 739,
+        "originalPriceText": "739",
+        "discountedPrice": 719,
+        "discountedPriceText": "719",
+        "currencySymbol": "TL"
+      },
+      "ratingScore": {
+        "averageRating": 4.341203315637515,
+        "totalCount": 21474
+      }
+    }
+  ]
+}
