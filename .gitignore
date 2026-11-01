@@ -16,6 +16,7 @@ env/
 ms-playwright/
 
 # Local data / secrets
+data/
 *.db
 *.sqlite3
 .env

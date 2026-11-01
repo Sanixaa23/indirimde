@@ -44,13 +44,37 @@ Bitti ve testli:
 - Bildirim metni (Türkçe) ve taşıma arayüzü (FCM enjekte edilir).
 
 - Trendyol canlı fetcher (Playwright ile tarayıcı render) — 403 engelini aşıp
-  gömülü arama JSON'unu çeker.
+  arama için gömülü JSON'u, fiyat için ürün sayfasının JSON-LD teklifini
+  (`schema.org/Product` → `offers.price`) okur. JSON-LD kararlı sözleşmedir;
+  sayfanın değişen özel React state'ine bağlı değildir.
+- **FastAPI sunucusu** (`backend/indirimde/server/`) — ara, cihaz token kaydı,
+  takibe al/çıkar, takip listesi uç noktaları; arka planda periyodik yoklama
+  (asyncio zamanlayıcı); düşüşte **FCM** push.
 
-Henüz yok (sunucu yolu için sıradaki):
-- FastAPI uç noktaları (ara, takibe al, takip listesi, cihaz token kaydı).
-- Zamanlayıcı (periyodik yoklama).
-- FCM gönderimi — Firebase projesi + `google-services.json` + sunucu kimliği
-  gerekir; bunları yalnızca sen oluşturabilirsin, o adım sende.
+Firebase gerektiren tek adım sende: `google-services.json` (istemci) +
+servis hesabı JSON'u (sunucu). Yoksa sunucu yine uçtan uca çalışır — FCM
+taşıması her push'u göndermek yerine loglar, böylece tüm akış (ara → takip →
+yokla → düşüş kararı → render) Firebase'siz denenebilir.
+
+## Sunucu (server + FCM)
+
+```bash
+cd backend
+python -m pip install -r requirements.txt
+python -m playwright install chromium
+python -m indirimde.server.run        # http://0.0.0.0:8000
+```
+
+Uç noktalar: `POST /search`, `POST /devices`, `POST/DELETE /watches`,
+`GET /watches?userId=`, `POST /poll` (elle tetik), `GET /health`.
+
+Ayarlar (ortam değişkeni): `INDIRIMDE_PORT`, `INDIRIMDE_POLL_SECONDS`
+(varsayılan 10800 = 3 saat), `INDIRIMDE_DATA` (JSON durum dosyası),
+`INDIRIMDE_FCM_CREDENTIALS` / `GOOGLE_APPLICATION_CREDENTIALS` (servis hesabı).
+
+FCM'i gerçekten göndermek için: Firebase projesi aç, bir servis hesabı anahtarı
+indir, yolunu `INDIRIMDE_FCM_CREDENTIALS` ile ver. Anahtar depoya girmez
+(`.gitignore`).
 
 ## Android uygulaması (v1, bağımsız)
 
@@ -90,4 +114,4 @@ python -m pip install -r requirements-dev.txt
 python -m pytest -q
 ```
 
-31 test, hepsi geçer.
+45 test, hepsi geçer (çekirdek + parser + watcher + sunucu/HTTP akışı).

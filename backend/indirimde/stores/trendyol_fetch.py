@@ -73,25 +73,44 @@ def fetch_search(query: str) -> Optional[dict]:
         return None
 
 
-def fetch_price_by_url(url: str) -> Optional[dict]:
-    """Open a product page and return its `price` object, or None.
+# The live price a buyer pays is published on the product page as JSON-LD
+# (schema.org Product -> offers.price), which Trendyol keeps current and
+# accurate. We read that rather than the page's private React state, which has
+# changed shape over time (it is now split across many `__envoy_*__PROPS`
+# blobs and no longer exposes a single product.price). JSON-LD is the stable
+# contract: `price` is the current selling price, `priceCurrency` its ISO code.
+_LD_PRICE_JS = r"""() => {
+  const scripts = document.querySelectorAll('script[type="application/ld+json"]');
+  for (const s of scripts) {
+    let data;
+    try { data = JSON.parse(s.textContent); } catch (e) { continue; }
+    const nodes = Array.isArray(data) ? data : [data];
+    for (const node of nodes) {
+      if (!node) continue;
+      let offer = node.offers;
+      if (Array.isArray(offer)) offer = offer[0];
+      if (offer && offer.price != null) {
+        return { price: String(offer.price),
+                 priceCurrency: offer.priceCurrency || "TRY" };
+      }
+    }
+  }
+  return null;
+}"""
 
-    The product detail page embeds its state in
-    `window.__PRODUCT_DETAIL_APP_INITIAL_STATE__.product`, which carries the
-    same price shape the search results use (discountedPriceText, oldText...).
+
+def fetch_price_by_url(url: str) -> Optional[dict]:
+    """Open a product page and return its live price as a JSON-LD offer dict
+    ({"price": "987.00", "priceCurrency": "TRY"}), or None if unreadable.
+
+    Fails closed: a timeout, a block, or a page with no JSON-LD offer returns
+    None, which the pure parser turns into "no price" rather than a guess.
     """
     try:
         with _page() as page:
             page.goto(url, wait_until="domcontentloaded")
-            page.wait_for_function(
-                "() => !!(window.__PRODUCT_DETAIL_APP_INITIAL_STATE__ "
-                "&& window.__PRODUCT_DETAIL_APP_INITIAL_STATE__.product "
-                "&& window.__PRODUCT_DETAIL_APP_INITIAL_STATE__.product.price)",
-                timeout=20000,
-            )
-            return page.evaluate(
-                "() => window.__PRODUCT_DETAIL_APP_INITIAL_STATE__.product.price"
-            )
+            page.wait_for_function(f"() => !!({_LD_PRICE_JS})()", timeout=20000)
+            return page.evaluate(_LD_PRICE_JS)
     except Exception:
         return None
 

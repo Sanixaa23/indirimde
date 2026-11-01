@@ -19,7 +19,7 @@ from __future__ import annotations
 from typing import Callable, List, Optional
 
 from ..models import Product
-from ..money import parse_tr
+from ..money import from_major, parse_tr
 from ..pricing import Price
 from .base import register
 
@@ -40,14 +40,41 @@ def _abs_url(path: str) -> str:
     return BASE + path
 
 
+def parse_ld_offer(offer: dict) -> Optional[Price]:
+    """Turn a schema.org JSON-LD offer into a Price (sale only), or None.
+
+    The product page publishes the current selling price as
+    `{"price": "987.00", "priceCurrency": "TRY"}`. This is what the buyer pays
+    now — the only figure the drop decision needs. It carries no struck-through
+    former price, so `was` is left None. The amount is a plain decimal string
+    (dot decimal), parsed exactly via `from_major`, not the Turkish text parser.
+    """
+    if not isinstance(offer, dict):
+        return None
+    amount = offer.get("price")
+    if amount is None:
+        return None
+    currency = offer.get("priceCurrency") or offer.get("currency") or "TRY"
+    try:
+        return Price(sale=from_major(str(amount), currency))
+    except (ValueError, TypeError):
+        return None
+
+
 def parse_price(price: dict) -> Optional[Price]:
     """Turn a Trendyol `price` object into a Price, or None if unreadable.
 
-    Returns None rather than raising so one malformed listing cannot blow up a
-    whole page of results, and so a missing price is never read as free.
+    Accepts two shapes: the search-results price object (with
+    `discountedPriceText` and an optional struck-through `oldText`), and the
+    product page's JSON-LD offer (a plain `price` decimal). Returns None rather
+    than raising so one malformed listing cannot blow up a whole page of
+    results, and so a missing price is never read as free.
     """
     if not isinstance(price, dict):
         return None
+    # JSON-LD offer shape: a bare decimal `price`, no discountedPriceText.
+    if "discountedPriceText" not in price and price.get("price") is not None:
+        return parse_ld_offer(price)
     sale_text = price.get("discountedPriceText")
     symbol = price.get("currencySymbol") or price.get("currency") or "TL"
     if not sale_text:
