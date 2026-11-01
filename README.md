@@ -3,6 +3,11 @@
 Takip ettiğin ürünün fiyatı düştüğünde telefonuna bildirim gönderen uygulama.
 Uygulama içinden ürün ara, takibe al, indirime girince haber al.
 
+![indirimde canlı demo](assets/demo.gif)
+
+> Yukarıdaki kayıt **canlı Trendyol'dan** alınmıştır: gerçek arama, gerçek
+> fiyatlar, gerçek düşüş kararı (`719,00 TL → 699,00 TL`, %2.8). Uydurma veri yok.
+
 ## Nasıl çalışıyor
 
 Üç parça var ve bilerek ayrık tutuldu:
@@ -51,6 +56,9 @@ Henüz yok (sunucu yolu için sıradaki):
 
 `android/` altında Kotlin + Jetpack Compose uygulaması. Bu ilk sürüm **tek
 başına** çalışır: sunucu ya da Firebase gerektirmez.
+
+<img src="assets/android.png" alt="indirimde Android arayüzü" width="300">
+
 
 - Fiyatı telefonun kendisi kontrol eder. Trendyol'a düz istek 403 döndüğü için
   sayfayı gizli bir **WebView**'de render edip veriyi oradan okur (sunucudaki
