@@ -38,15 +38,43 @@ Bitti ve testli:
 - İzle → oku → karar → bildir akışı, mağaza kesintisine dayanıklı.
 - Bildirim metni (Türkçe) ve taşıma arayüzü (FCM enjekte edilir).
 
-Henüz yok (sıradaki):
-- Trendyol canlı fetcher (tarayıcı render) — parser hazır, bağlanacak.
+- Trendyol canlı fetcher (Playwright ile tarayıcı render) — 403 engelini aşıp
+  gömülü arama JSON'unu çeker.
+
+Henüz yok (sunucu yolu için sıradaki):
 - FastAPI uç noktaları (ara, takibe al, takip listesi, cihaz token kaydı).
 - Zamanlayıcı (periyodik yoklama).
-- Android uygulaması (Kotlin/Compose: arama, takip listesi, FCM istemci).
 - FCM gönderimi — Firebase projesi + `google-services.json` + sunucu kimliği
   gerekir; bunları yalnızca sen oluşturabilirsin, o adım sende.
 
-## Çalıştırma (testler)
+## Android uygulaması (v1, bağımsız)
+
+`android/` altında Kotlin + Jetpack Compose uygulaması. Bu ilk sürüm **tek
+başına** çalışır: sunucu ya da Firebase gerektirmez.
+
+- Fiyatı telefonun kendisi kontrol eder. Trendyol'a düz istek 403 döndüğü için
+  sayfayı gizli bir **WebView**'de render edip veriyi oradan okur (sunucudaki
+  Playwright'ın mobil karşılığı): arama gömülü JSON'dan, fiyat yeniden-kontrolü
+  ürün sayfasının DOM'undaki satış fiyatından.
+- **WorkManager** 3 saatte bir arka planda kontrol eder; indirim eşiği (yüzde +
+  mutlak) aşılınca **yerel bildirim** atar. Backend watcher'ın aynı mantığı:
+  ilk okuma tabanı kurar, mağaza kesintisi fiyat değişikliği sanılmaz.
+- Para/indirim çekirdeği backend'in Kotlin portu (kuruş, float yok).
+- Apple tarzı cam arayüz; "Ara" ve "Takip" sekmeleri.
+
+Kurulabilir APK: bu deponun **Releases** bölümünde.
+
+Kaynaktan derleme (JDK 17 + Android SDK gerekir):
+
+```bash
+cd android
+./gradlew assembleDebug
+```
+
+Not: Gradle/AGP proje yolunda ASCII olmayan karakteri reddeder; depoyu ASCII bir
+yola koyup derle.
+
+## Çalıştırma (backend testleri)
 
 ```bash
 cd backend

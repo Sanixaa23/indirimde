@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- A plain framework theme with no action bar; the UI itself is Compose,
+         so the activity theme only needs to get out of the way. -->
+    <style name="Theme.Indirimde" parent="@android:style/Theme.Material.Light.NoActionBar">
+        <item name="android:windowBackground">@color/frost_bottom</item>
+        <item name="android:statusBarColor">@color/frost_top</item>
+        <item name="android:windowLightStatusBar">true</item>
+    </style>
+</resources>
