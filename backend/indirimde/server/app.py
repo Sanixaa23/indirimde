@@ -93,10 +93,11 @@ def _rule_from(min_pct: Optional[str], min_minor: Optional[int]) -> DropRule:
 
 
 def _default_store() -> StoreAdapter:
-    from ..stores.trendyol import TrendyolStore
-    from ..stores.trendyol_fetch import make_fetchers
+    # Every Turkish shop at once: a search fans out across all of them, a price
+    # re-check is routed back to the store the product came from.
+    from ..stores.multi import build_live_multistore
 
-    return TrendyolStore(*make_fetchers())
+    return build_live_multistore()
 
 
 def create_app(
@@ -148,6 +149,11 @@ def create_app(
     @app.get("/health")
     def health() -> dict:
         return {"ok": True, "pollSeconds": interval}
+
+    @app.get("/stores")
+    def stores() -> dict:
+        names = getattr(store, "store_names", None) or [getattr(store, "name", "?")]
+        return {"stores": names}
 
     @app.post("/search")
     def search(body: SearchIn) -> dict:

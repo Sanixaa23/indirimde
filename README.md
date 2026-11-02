@@ -5,8 +5,9 @@ Uygulama içinden ürün ara, takibe al, indirime girince haber al.
 
 ![indirimde canlı demo](assets/demo.gif)
 
-> Yukarıdaki kayıt **canlı Trendyol'dan** alınmıştır: gerçek arama, gerçek
-> fiyatlar, gerçek düşüş kararı (`719,00 TL → 699,00 TL`, %2.8). Uydurma veri yok.
+> Yukarıdaki kayıt **canlı** alınmıştır: tek aramada **Trendyol + n11**'e
+> paralel fan-out, gerçek fiyatlar + eski fiyatlar, gerçek düşüş kararı ve
+> FCM push (`15.000,00 TL → 6.395,00 TL`, %57.4). Uydurma veri yok.
 
 ## Nasıl çalışıyor
 
@@ -25,28 +26,44 @@ Uygulama içinden ürün ara, takibe al, indirime girince haber al.
   okur, karar verir, tabanı günceller, düştüyse bildirir. Mağaza çökerse taban
   son gerçek fiyatta kalır; kesinti fiyat değişikliği sanılmaz.
 
-Mağaza olarak Türkiye seçildi; ilk adaptör **Trendyol**. Trendyol düz sunucu
-isteğini `403` ile reddediyor (bot koruması), bu yüzden arama sonucu gerçek bir
-tarayıcıda render edilip sayfadaki gömülü JSON
-(`window["__single-search-result__PROPS"].data`) alınır. Parser bu yapıyı
-canlı siteden yakalanmış bir örneğe (`backend/fixtures/`) göre test edilir.
+### Mağazalar
 
-Fiyat anlamı: alıcının ödediği = `discountedPriceText` → takip edilen fiyat.
-`old > 0` olduğunda çizili eski fiyat gösterim içindir.
+Türk alışveriş siteleri. Tek aramada hepsine **paralel fan-out** yapılır
+(`stores/multi.py`), sonuçlar harmanlanır; bir ürünün fiyat yeniden-kontrolü
+geldiği mağazaya yönlenir. Bir mağaza engellerse diğerlerini batırmaz
+(her adaptör fail-closed).
+
+- **Trendyol** — düz istek `403` döndüğü için sayfa tarayıcıda render edilir;
+  arama gömülü state'ten (`window["__single-search-result__PROPS"].data`),
+  fiyat yeniden-kontrolü ürün sayfasının JSON-LD teklifinden okunur.
+- **n11** — arama sayfasının JSON-LD `ItemList`'i (satış + liste/eski fiyat),
+  ürün sayfasının JSON-LD `Product` teklifi. `backend/fixtures/n11_*.json`
+  canlı siteden yakalanmış örneğe göre testli.
+
+Yeni mağaza eklemek = bir *parser* (fixture'a karşı testli) + bir *fetcher*.
+Çoğu sitede fiyat kaynağı ortak: `schema.org/Product → offers.price`
+(`stores/ld.py`). **Hepsiburada** ve **Amazon.com.tr** headless tarayıcıya bot
+duvarı çıkarıyor (Hepsiburada "Güvenlik" sayfası; Amazon JSON-LD vermiyor);
+aynı desenle eklenebilir ama ya `INDIRIMDE_BROWSER_CHANNEL=chrome` ya da
+DOM-parse gerektirir — henüz yok.
+
+Fiyat anlamı: alıcının ödediği (Trendyol `discountedPriceText`, n11
+`offers.price`) → takip edilen fiyat. Çizili/liste fiyat yalnız gösterim için.
 
 ## Durum
 
 Bitti ve testli:
 - Para tipi (TR fiyat parse, kuruş, Decimal yuvarlama).
 - İndirim kararı (yüzde + mutlak eşik, kullanıcı başına kural).
-- Trendyol arama parser'ı (gerçek yakalanmış veriye karşı).
+- Trendyol + n11 arama parser'ları (gerçek yakalanmış veriye karşı).
+- Çoklu-mağaza fan-out arama (paralel, harmanlanmış sonuç, fiyat yönlendirme).
 - İzle → oku → karar → bildir akışı, mağaza kesintisine dayanıklı.
 - Bildirim metni (Türkçe) ve taşıma arayüzü (FCM enjekte edilir).
 
-- Trendyol canlı fetcher (Playwright ile tarayıcı render) — 403 engelini aşıp
-  arama için gömülü JSON'u, fiyat için ürün sayfasının JSON-LD teklifini
-  (`schema.org/Product` → `offers.price`) okur. JSON-LD kararlı sözleşmedir;
-  sayfanın değişen özel React state'ine bağlı değildir.
+- Canlı fetcher'lar (Playwright ile tarayıcı render) — Trendyol 403'ünü ve
+  n11 bot duvarını aşar; fiyat için ortak `schema.org/Product → offers.price`
+  (JSON-LD) kaynağı. JSON-LD kararlı sözleşmedir; sayfanın değişen özel
+  state'ine bağlı değildir.
 - **FastAPI sunucusu** (`backend/indirimde/server/`) — ara, cihaz token kaydı,
   takibe al/çıkar, takip listesi uç noktaları; arka planda periyodik yoklama
   (asyncio zamanlayıcı); düşüşte **FCM** push.
@@ -65,8 +82,9 @@ python -m playwright install chromium
 python -m indirimde.server.run        # http://0.0.0.0:8000
 ```
 
-Uç noktalar: `POST /search`, `POST /devices`, `POST/DELETE /watches`,
-`GET /watches?userId=`, `POST /poll` (elle tetik), `GET /health`.
+Uç noktalar: `POST /search` (tüm mağazalara fan-out), `GET /stores` (aktif
+mağazalar), `POST /devices`, `POST/DELETE /watches`, `GET /watches?userId=`,
+`POST /poll` (elle tetik), `GET /health`.
 
 Ayarlar (ortam değişkeni): `INDIRIMDE_PORT`, `INDIRIMDE_POLL_SECONDS`
 (varsayılan 10800 = 3 saat), `INDIRIMDE_DATA` (JSON durum dosyası),
@@ -114,4 +132,5 @@ python -m pip install -r requirements-dev.txt
 python -m pytest -q
 ```
 
-45 test, hepsi geçer (çekirdek + parser + watcher + sunucu/HTTP akışı).
+59 test, hepsi geçer (çekirdek + Trendyol/n11 parser + watcher + çoklu-mağaza
+fan-out + sunucu/HTTP akışı).

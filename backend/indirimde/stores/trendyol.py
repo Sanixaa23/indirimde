@@ -19,9 +19,10 @@ from __future__ import annotations
 from typing import Callable, List, Optional
 
 from ..models import Product
-from ..money import from_major, parse_tr
+from ..money import parse_tr
 from ..pricing import Price
 from .base import register
+from .ld import parse_ld_offer
 
 BASE = "https://www.trendyol.com"
 
@@ -38,27 +39,6 @@ def _abs_url(path: str) -> str:
     if path.startswith("http"):
         return path
     return BASE + path
-
-
-def parse_ld_offer(offer: dict) -> Optional[Price]:
-    """Turn a schema.org JSON-LD offer into a Price (sale only), or None.
-
-    The product page publishes the current selling price as
-    `{"price": "987.00", "priceCurrency": "TRY"}`. This is what the buyer pays
-    now — the only figure the drop decision needs. It carries no struck-through
-    former price, so `was` is left None. The amount is a plain decimal string
-    (dot decimal), parsed exactly via `from_major`, not the Turkish text parser.
-    """
-    if not isinstance(offer, dict):
-        return None
-    amount = offer.get("price")
-    if amount is None:
-        return None
-    currency = offer.get("priceCurrency") or offer.get("currency") or "TRY"
-    try:
-        return Price(sale=from_major(str(amount), currency))
-    except (ValueError, TypeError):
-        return None
 
 
 def parse_price(price: dict) -> Optional[Price]:
