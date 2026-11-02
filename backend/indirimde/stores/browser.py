@@ -21,18 +21,27 @@ USER_AGENT = (
 
 
 @contextmanager
-def page(timeout_ms: int = 25000) -> Iterator["object"]:
+def page(
+    timeout_ms: int = 25000,
+    headless: bool = True,
+    channel: "str | None" = None,
+) -> Iterator["object"]:
     """Open a page in a fresh Chromium, yield it, always clean up.
 
     Each call launches and closes its own browser: slower than pooling but
     stateless and safe to call from FastAPI's thread pool, where several polls
     may run at once.
+
+    `channel` (explicit, else INDIRIMDE_BROWSER_CHANNEL) picks the installed
+    Google Chrome, and `headless=False` drives a visible window — some shops
+    (Hepsiburada) only let a real, headful Chrome through their bot wall. A
+    headful run needs a desktop session (or Xvfb on a server).
     """
     from playwright.sync_api import sync_playwright
 
-    channel = os.environ.get("INDIRIMDE_BROWSER_CHANNEL") or None
+    channel = channel or os.environ.get("INDIRIMDE_BROWSER_CHANNEL") or None
     with sync_playwright() as pw:
-        browser = pw.chromium.launch(headless=True, channel=channel)
+        browser = pw.chromium.launch(headless=headless, channel=channel)
         try:
             context = browser.new_context(
                 user_agent=USER_AGENT,
