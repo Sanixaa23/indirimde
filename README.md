@@ -39,13 +39,17 @@ geldiği mağazaya yönlenir. Bir mağaza engellerse diğerlerini batırmaz
 - **n11** — arama sayfasının JSON-LD `ItemList`'i (satış + liste/eski fiyat),
   ürün sayfasının JSON-LD `Product` teklifi. `backend/fixtures/n11_*.json`
   canlı siteden yakalanmış örneğe göre testli.
+- **Hepsiburada** (opsiyonel, `INDIRIMDE_HEPSIBURADA=1`) — JSON-LD/state
+  vermiyor ve headless'a "Güvenlik" bot duvarı çıkarıyor; yalnız **gerçek,
+  görünür Google Chrome** (`channel=chrome`, headful) geçiyor, veri DOM'dan
+  okunuyor (retry'lı, fail-closed). Arama canlı doğrulandı; PDP fiyat
+  yeniden-kontrolü masaüstü oturumu gerektirir (sunucuda Xvfb) ve
+  `fixtures/hepsiburada_*.json`'a göre parser testli.
 
 Yeni mağaza eklemek = bir *parser* (fixture'a karşı testli) + bir *fetcher*.
 Çoğu sitede fiyat kaynağı ortak: `schema.org/Product → offers.price`
-(`stores/ld.py`). **Hepsiburada** ve **Amazon.com.tr** headless tarayıcıya bot
-duvarı çıkarıyor (Hepsiburada "Güvenlik" sayfası; Amazon JSON-LD vermiyor);
-aynı desenle eklenebilir ama ya `INDIRIMDE_BROWSER_CHANNEL=chrome` ya da
-DOM-parse gerektirir — henüz yok.
+(`stores/ld.py`). **Amazon.com.tr** JSON-LD vermiyor (sadece DOM) — aynı
+desenle eklenebilir, henüz yok.
 
 Fiyat anlamı: alıcının ödediği (Trendyol `discountedPriceText`, n11
 `offers.price`) → takip edilen fiyat. Çizili/liste fiyat yalnız gösterim için.
@@ -55,7 +59,7 @@ Fiyat anlamı: alıcının ödediği (Trendyol `discountedPriceText`, n11
 Bitti ve testli:
 - Para tipi (TR fiyat parse, kuruş, Decimal yuvarlama).
 - İndirim kararı (yüzde + mutlak eşik, kullanıcı başına kural).
-- Trendyol + n11 arama parser'ları (gerçek yakalanmış veriye karşı).
+- Trendyol + n11 + Hepsiburada arama parser'ları (gerçek yakalanmış veriye karşı).
 - Çoklu-mağaza fan-out arama (paralel, harmanlanmış sonuç, fiyat yönlendirme).
 - İzle → oku → karar → bildir akışı, mağaza kesintisine dayanıklı.
 - Bildirim metni (Türkçe) ve taşıma arayüzü (FCM enjekte edilir).
@@ -132,5 +136,5 @@ python -m pip install -r requirements-dev.txt
 python -m pytest -q
 ```
 
-59 test, hepsi geçer (çekirdek + Trendyol/n11 parser + watcher + çoklu-mağaza
-fan-out + sunucu/HTTP akışı).
+69 test, hepsi geçer (çekirdek + Trendyol/n11/Hepsiburada parser + watcher +
+çoklu-mağaza fan-out + sunucu/HTTP akışı).

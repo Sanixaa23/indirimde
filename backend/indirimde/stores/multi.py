@@ -77,16 +77,29 @@ class MultiStore:
 
 
 def build_live_stores() -> Dict[str, StoreAdapter]:
-    """Every store wired with its live (Playwright) fetchers."""
+    """Every store wired with its live (Playwright) fetchers.
+
+    Hepsiburada is included only when INDIRIMDE_HEPSIBURADA=1, because it needs a
+    headful Google Chrome and a desktop session; off by default so a plain or
+    headless deployment does not spawn visible windows that will just be blocked.
+    """
+    import os
+
     from .n11 import N11Store
     from .n11_fetch import make_fetchers as n11_fetchers
     from .trendyol import TrendyolStore
     from .trendyol_fetch import make_fetchers as trendyol_fetchers
 
-    return {
+    stores: Dict[str, StoreAdapter] = {
         "trendyol": TrendyolStore(*trendyol_fetchers()),
         "n11": N11Store(*n11_fetchers()),
     }
+    if os.environ.get("INDIRIMDE_HEPSIBURADA") == "1":
+        from .hepsiburada import HepsiburadaStore
+        from .hepsiburada_fetch import make_fetchers as hb_fetchers
+
+        stores["hepsiburada"] = HepsiburadaStore(*hb_fetchers())
+    return stores
 
 
 def build_live_multistore() -> MultiStore:
